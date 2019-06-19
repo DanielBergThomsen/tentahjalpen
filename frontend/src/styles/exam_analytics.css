@@ -1,0 +1,15 @@
+.overview
+{
+	height: 45vh !important;
+}
+
+.pie
+{
+	min-height: 0 !important;
+}
+
+.upload_buttons
+{
+	width: fit-content !important;
+}
+

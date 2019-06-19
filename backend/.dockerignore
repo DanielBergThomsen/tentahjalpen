@@ -1,0 +1,10 @@
+.dockerignore
+Dockerfile
+__pychache__
+*.pyc
+*.pyo
+*.pyd
+.git
+.gitignore
+results.xlsx
+db_manage.py
