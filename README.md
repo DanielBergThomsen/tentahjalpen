@@ -85,5 +85,7 @@ make dev-front
 3. Configure two applications on the Dokku server
 4. Add two remotes to your local git repository with the names `dokku-backend`
 and `dokku-frontend` respectively
-5. Run `make dokku-backend` and `make dokku-backend` respectively to deploy both
+5. Create a postgres database using the [dokku plugin](https://github.com/dokku/dokku-postgres)
+6. Generate TLS certificates using the Letsencrypt [dokku plugin](https://github.com/dokku/dokku-letsencrypt)
+7. Run `make dokku-backend` and `make dokku-backend` respectively to deploy both
 the backend and frontend
