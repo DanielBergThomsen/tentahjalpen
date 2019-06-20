@@ -1,0 +1,45 @@
+matrix:
+
+  include:
+
+  # job for the backend
+  - language: python
+
+    python:
+    - "3.6"
+
+    addons:
+      apt:
+        packages:
+          - postgresql-server-dev-9.2
+
+    # necessary for pytest-postgresql fixtures
+    services:
+      - postgresql
+
+    cache: pip
+
+    install:
+      - pip install -r backend/requirements.txt
+
+    script:
+      - cd backend
+      - export PYTHONPATH=$PYTHONPATH:$(pwd)
+      - pytest
+
+
+  # job for the frontend
+  - language: node_js
+
+    node_js:
+      - "11"
+
+    cache: npm
+
+    install:
+      - cd frontend
+      - npm install
+
+    script:
+      - cd ..
+      - make test-front

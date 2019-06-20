@@ -1,4 +1,5 @@
-### Insert logo and CI stuff here
+### Insert logo
+[![Build Status](https://travis-ci.com/DanielBergThomsen/tentahjalpen.svg?branch=master)](https://travis-ci.com/DanielBergThomsen/tentahjalpen)
 A website and an API to look at the results of exams taken at 
 Chalmers University of Technology.
 
