@@ -64,12 +64,16 @@ virtualenv venv
 . /venv/bin/activate
 pip install -r requirements.txt
 ```
-5. Navigate back to project root and run the backend
+5. Create a postgres database called courseData
+```
+createdb courseData
+```
+6. Navigate back to project root and run the backend
 ```
 cd ..
 make dev-back
 ```
-6. Open new terminal session and run the frontend
+7. Open new terminal session and run the frontend
 ```
 make dev-front
 ```
