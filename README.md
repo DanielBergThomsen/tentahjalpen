@@ -69,7 +69,7 @@ pip install -r requirements.txt
 cd ..
 make dev-back
 ```
-6. Open new terminal session and start run the frontend
+6. Open new terminal session and run the frontend
 ```
 make dev-front
 ```
