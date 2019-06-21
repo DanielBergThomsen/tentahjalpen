@@ -91,13 +91,15 @@ def create_app(production=False, test_db=None):
     # allow CORS headers
     CORS(app)
 
-    # start scheduler for updates
-    scheduler = APScheduler()
-    scheduler.init_app(app)
-    scheduler.start()
+    # only run update and init if not running tests
+    if test_db is None:
+        # start scheduler for updates
+        scheduler = APScheduler()
+        scheduler.init_app(app)
+        scheduler.start()
 
-    # perform manual check of database on startup
-    init()
+        # perform manual check of database on startup
+        init()
 
     @app.route("/courses", methods=["GET"])
     def get_courses():
