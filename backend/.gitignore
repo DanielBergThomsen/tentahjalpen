@@ -123,4 +123,4 @@ dmypy.json
 .pyre/
 
 # local excel file
-*.xlsx
+*results.xlsx
