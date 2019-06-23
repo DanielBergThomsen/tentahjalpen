@@ -1,7 +1,16 @@
-### Insert logo
-[![Build Status](https://travis-ci.com/DanielBergThomsen/tentahjalpen.svg?branch=master)](https://travis-ci.com/DanielBergThomsen/tentahjalpen)
+<h1 align="center">
+<a style="text-align:center" href="https://www.tentahjalpen.se/">
+  <img src="./frontend/src/art/with-text.svg" alt="Markdownify" width="600">
+</a>
+</h1>
+
+<h4 align="center">
 A website and an API to look at the results of exams taken at 
 Chalmers University of Technology.
+<br>
+<img src="https://travis-ci.com/DanielBergThomsen/tentahjalpen.svg?branch=master"></img>
+</h4>
+
 
 ## Features
 * Ability to look at exams in both the absolute numbers of different
