@@ -26,6 +26,7 @@ matrix:
       - cd backend
       - export PYTHONPATH=$PYTHONPATH:$(pwd)
       - pytest
+      - pylint
 
 
   # job for the frontend
