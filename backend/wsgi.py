@@ -5,4 +5,5 @@ gunicorn.
 
 from tentahjalpen import create_app
 
-APP = create_app(production=True)
+# pylint: disable=invalid-name
+app = create_app(production=True)
