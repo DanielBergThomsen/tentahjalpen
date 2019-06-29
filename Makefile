@@ -66,3 +66,9 @@ test-back:
 		&& cd backend \
 		&& python -m pytest \
 		&& cd ..
+
+lint-back:
+	. backend/venv/bin/activate \
+		&& cd backend \
+		&& python -m pylint **/*.py \
+		&& cd ..
