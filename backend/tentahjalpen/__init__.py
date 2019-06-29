@@ -1,38 +1,57 @@
+"""
+The application factory for the Tentahjälpen backend. Here the initial configuration for
+the application is sourced, and any eventual testing or production specific logic is found
+here.
+"""
+
 import os
 import io
 import base64
 
-from flask import Flask, make_response, Response, jsonify, abort, send_file, url_for, request, session
+from flask import Flask, make_response, Response, jsonify, abort, send_file, url_for
+from flask import request, session
+from flask.logging import create_logger
 from flask_cors import CORS
 from flask_apscheduler import APScheduler
 from .db_interface import DBInterface, init_db
 from .scraper import scraper
 
 
+# pylint is disabled temporarily as functions will be moved to blueprint class at a later point
+# pylint: disable-all
 def create_app(production=False, test_db=None):
+    """Create Flask application object from given configuration.
 
-    # make it possible to create config.py in root of backend to override environment-specific settings
+    :param production: boolean that changes the connection parameter to use environment variable
+    DATABASE_URL to connect to the database
+    :param test_db: testing database passed to DBInterface class and used when querying everything
+    """
+
+    # make it possible to create config.py in root of backend to override
+    # environment-specific settings
     app = Flask(__name__, instance_relative_config=True)
+    logger = create_logger(app)
 
     # DBInterface instance used for all database operations
-    db = None
+    connected_db = None
 
     def update():
-        """ Update database using scraper.update_all and update jsoned_course_list to include any new entries """
+        """Update database using scraper.update_all and update jsoned_course_list to
+        include any new entries"""
 
         # update database
         with app.app_context():
-            scraper.update_all(db)
+            scraper.update_all(connected_db)
 
     def init():
-        """ Check if database is initialized, initialize if necessary and update afterwards """
+        """Check if database is initialized, initialize if necessary and update afterwards"""
 
-        app.logger.info("Checking if database is initialized...")
-        entries = db.query("SELECT * FROM results")
+        logger.info("Checking if database is initialized...")
+        entries = connected_db.query("SELECT * FROM results")
 
-        if len(entries) == 0:
-            app.logger.info("Initializing database...")
-            init_db("schema.sql", db)
+        if not entries:
+            logger.info("Initializing database...")
+            init_db("schema.sql", connected_db)
 
         update()
 
@@ -51,7 +70,8 @@ def create_app(production=False, test_db=None):
         DB_PORT=5432,
         SSL="disable",
 
-        # configuration used to setup Flask-APScheduler to call update() every night at 02:01 (GMT+2)
+        # configuration used to setup Flask-APScheduler to call update() every night at
+        # 02:01 (GMT+2)
         JOBS=[
             {
                 "id": "update db data",
@@ -72,13 +92,17 @@ def create_app(production=False, test_db=None):
     if production:
 
         # connect to postgres using environment variables
-        db = DBInterface(url=os.environ["DATABASE_URL"])
+        connected_db = DBInterface(url=os.environ["DATABASE_URL"])
 
     elif test_db is None:
 
         # connect to postgres
-        db = DBInterface(dbname=app.config["DB_NAME"], user=app.config["DB_USER"], password=app.config["DB_PASSWD"],
-                         host=app.config["DB_HOST"], port=app.config["DB_PORT"], sslmode=app.config["SSL"])
+        connected_db = DBInterface(dbname=app.config["DB_NAME"],
+                                   user=app.config["DB_USER"],
+                                   password=app.config["DB_PASSWD"],
+                                   host=app.config["DB_HOST"],
+                                   port=app.config["DB_PORT"],
+                                   sslmode=app.config["SSL"])
 
         # load the instance config, if it exists, when not testing
         app.config.from_pyfile("config.py", silent=True)
@@ -86,7 +110,7 @@ def create_app(production=False, test_db=None):
     else:
 
         # load the test database
-        db = test_db
+        connected_db = test_db
 
     # allow CORS headers
     CORS(app)
@@ -111,9 +135,10 @@ def create_app(production=False, test_db=None):
         :return: string of JSONed course list
         """
 
-        entries = db.query("SELECT DISTINCT ON (code) code, name FROM results")
+        entries = connected_db.query(
+            "SELECT DISTINCT ON (code) code, name FROM results")
 
-        app.logger.info("Sending course list")
+        logger.info("Sending course list")
         return jsonify(entries)
 
     # return list of results by date from given course code
@@ -143,13 +168,13 @@ def create_app(production=False, test_db=None):
 
         # perform query using given course code
         # safe since using %s protects from SQL injections
-        entries = db.query(
+        entries = connected_db.query(
             "SELECT exam, solution, failures, threes, fours, fives, taken, name, code FROM results "
             "WHERE code=%s ORDER BY taken",
             (code,))
 
         # there were no matches on the course code
-        if len(entries) == 0:
+        if not entries:
             abort(404)
 
         # format the entries nicely
@@ -168,7 +193,7 @@ def create_app(production=False, test_db=None):
                 entry["solution"] = url_for(
                     "get_solution", code=code, date=entry["taken"], _external=True)
 
-        app.logger.info("Responding to request for %s", code)
+        logger.info("Responding to request for %s", code)
         return jsonify(entries)
 
     @app.route("/courses/<string:code>/<string:date>/exam", methods=["GET"])
@@ -183,12 +208,12 @@ def create_app(production=False, test_db=None):
         :param date: date when exam was taken
         :return: response containing exam pdf
         """
-        entries = db.query(
+        entries = connected_db.query(
             "SELECT exam FROM results WHERE code=%s AND taken=%s", (code, date))
-        if not entries or entries[0]["exam"] == None:
+        if not entries or entries[0]["exam"] is None:
             abort(404)
 
-        app.logger.info(
+        logger.info(
             "Responding to request for exam in course %s taken on %s", code, date)
         return send_file(io.BytesIO(entries[0]["exam"]), mimetype="application/pdf")
 
@@ -204,12 +229,12 @@ def create_app(production=False, test_db=None):
         :param date: date when exam was taken
         :return: response containing exam pdf
         """
-        entries = db.query(
+        entries = connected_db.query(
             "SELECT solution FROM results WHERE code=%s AND taken=%s", (code, date))
-        if not entries or entries[0]["solution"] == None:
+        if not entries or entries[0]["solution"] is None:
             abort(404)
 
-        app.logger.info(
+        logger.info(
             "Responding to request for solution in course %s taken on %s", code, date)
         return send_file(io.BytesIO(entries[0]["solution"]), mimetype="application/pdf")
 
@@ -232,13 +257,13 @@ def create_app(production=False, test_db=None):
             abort(400)
 
         # we need the actual exam, and it should also be a string
-        if "exam" in content and type(content["exam"]) is not str:
+        if "exam" in content and not isinstance(content["exam"], str):
             abort(400)
 
         # check that the exam exists
-        exam = db.query(
+        exam = connected_db.query(
             "SELECT exam FROM results WHERE code=%s AND taken=%s", (code, date))
-        if len(exam) <= 0:
+        if not exam:
             abort(404)
 
         # check if exam file is already present
@@ -249,11 +274,11 @@ def create_app(production=False, test_db=None):
         decoded = base64.b64decode(content["exam"])
 
         # insert binary data as an exam suggestion
-        db.query(
+        connected_db.query(
             "INSERT INTO exam_suggestions (taken, code, exam) VALUES (%s, %s, %s)",
             (date, code, decoded))
 
-        app.logger.info("Inserting exam suggestion for code %s", code)
+        logger.info("Inserting exam suggestion for code %s", code)
         return Response(status=200)
 
     # submit solution pdf suggestion in base64 encoding
@@ -275,13 +300,13 @@ def create_app(production=False, test_db=None):
             abort(400)
 
         # we need the actual pdf, and it should also be a string
-        if "solution" in content and type(content["solution"]) is not str:
+        if "solution" in content and not isinstance(content["solution"], str):
             abort(400)
 
         # check that the exam exists
-        exam = db.query(
+        exam = connected_db.query(
             "SELECT solution FROM results WHERE code=%s AND taken=%s", (code, date))
-        if len(exam) <= 0:
+        if not exam:
             abort(404)
 
         # check if exam file is already present
@@ -292,32 +317,32 @@ def create_app(production=False, test_db=None):
         decoded = base64.b64decode(content["solution"])
 
         # insert binary data as an exam suggestion
-        db.query(
+        connected_db.query(
             "INSERT INTO exam_suggestions (taken, code, solution) VALUES (%s, %s, %s)",
             (date, code, decoded))
 
-        app.logger.info("Inserting solution suggestion for code %s", code)
+        logger.info("Inserting solution suggestion for code %s", code)
         return Response(status=200)
 
     @app.errorhandler(400)
-    def conflict(error):
-        """ Return JSON response indicating that a bad request was performed (400) """
+    def bad_request(_):
+        """Return JSON response indicating that a bad request was performed (400)"""
 
-        app.logger.error("BAD REQUEST: %s", request.url)
+        logger.error("BAD REQUEST: %s", request.url)
         return make_response(jsonify({"error": "Bad request"}), 400)
 
     @app.errorhandler(404)
-    def not_found(error):
-        """ Return JSON response indicating that the resource wasn't found (404)"""
+    def not_found(_):
+        """Return JSON response indicating that the resource wasn't found (404)"""
 
-        app.logger.error("RESOURCE NOT FOUND: %s", request.url)
+        logger.error("RESOURCE NOT FOUND: %s", request.url)
         return make_response(jsonify({"error": "Not found"}), 404)
 
     @app.errorhandler(409)
-    def conflict(error):
-        """ Return JSON response indicating that the resource already exists (409)"""
+    def conflict(_):
+        """Return JSON response indicating that the resource already exists (409)"""
 
-        app.logger.error("RESOURCE ALREADY EXISTS: %s", request.url)
+        logger.error("RESOURCE ALREADY EXISTS: %s", request.url)
         return make_response(jsonify({"error": "Resource already present"}), 409)
 
     return app

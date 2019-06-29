@@ -1,12 +1,21 @@
-import psycopg2
-import psycopg2.extras
+"""
+File contains both the main interface to postgres as a class, as well as a set of
+convenience functions for maintaining the exam_suggestions table, initializing the
+database and scraping chalmerstenta.se for new exam_suggestions automatically.
+"""
 
 import os
 import webbrowser
 from tabulate import tabulate
+import psycopg2
+import psycopg2.extras
 
 
-class DBInterface:
+class DBInterface: # pylint: disable=too-few-public-methods
+    """Class to increase convenience in interfacing with a postgres database using the
+    psycopg2 module. Connections can be established either using keyword arguments, or
+    a connection URL. The class allows for effortless passing of testing databases for
+    mocking purposes."""
 
     def __init__(self, **kwargs):
         """ Establish persistent connection to Postgres database using connection parameters """
@@ -28,16 +37,12 @@ class DBInterface:
     def query(self, query, args=None):
         """ Executes query string with optional arguments
 
-        >>> query(db, args) # doctest: +SKIP
+        >>> query("SELECT * FROM EXAMPLE", args) # doctest: +SKIP
         [RealDictRow(["entry1", "value1"]), RealDictRow(["entry2", "value2"])]
 
 
-        >>> query(db, None) # doctest: +SKIP
+        >>> query("SELECT * FROM EXAMPLE", None) # doctest: +SKIP
         [RealDictRow(["entry1", "value1"]), RealDictRow(["entry2", "value2"])]
-
-
-        >>> query(db, args) # doctest: +SKIP
-
 
         :param query: string query to execute
         :param args: tuple of strings to insert on '%s' in query
@@ -45,38 +50,41 @@ class DBInterface:
         """
 
         # gather connection
-        db = self.connection
+        connected_db = self.connection
 
         # create cursor reference
-        c = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cursor = connected_db.cursor(
+            cursor_factory=psycopg2.extras.RealDictCursor)
 
         try:
             if args is None:
-                c.execute(query)
+                cursor.execute(query)
 
             # execute query safely provided string uses %s token
             else:
-                c.execute(query, args)
+                cursor.execute(query, args)
 
-            if c.description is not None:
-                return c.fetchall()
+            if cursor.description is not None:
+                return cursor.fetchall()
 
-        except:
-            db.rollback()
+            return None
+
+        except psycopg2.DataError:
+            connected_db.rollback()
             return []
 
 
-def list(db):
+def list_suggestions(connected_db):
     """Print list of current course suggestions
 
-    >>> list(db) # doctest: +SKIP
+    >>> list_suggestions(connected_db) # doctest: +SKIP
     Code    Taken         ID
     ------  ----------  ----
     ...
 
     """
-    exams = db.query("SELECT * FROM exam_suggestions")
-    for i in range(len(exams)):
+    exams = connected_db.query("SELECT * FROM exam_suggestions")
+    for i, _ in enumerate(exams):
         suggestion_type = None
         if exams[i].get("exam", None) is not None:
             suggestion_type = "exam"
@@ -89,10 +97,10 @@ def list(db):
     print(tabulate(exams, headers=["Type", "Code", "Taken", "ID"]))
 
 
-def remove(id, db):
+def remove(suggestion_id, connected_db):
     """Remove exam suggestion from database
 
-    >>> remove(1, db) # doctest: +SKIP
+    >>> remove(1, connected_db) # doctest: +SKIP
     Removed ... from database
 
 
@@ -100,50 +108,50 @@ def remove(id, db):
 
     """
     try:
-        entry = db.query(
-            "SELECT code, taken FROM exam_suggestions WHERE id=%s", (id,))[0]
-        db.query(
-            "DELETE FROM exam_suggestions WHERE id=%s", (id,))
+        entry = connected_db.query(
+            "SELECT code, taken FROM exam_suggestions WHERE id=%s", (suggestion_id,))[0]
+        connected_db.query(
+            "DELETE FROM exam_suggestions WHERE id=%s", (suggestion_id,))
         print("Removed " + entry["code"] + " " +
-              str(entry["taken"]) + " id=" + str(id) + " from database")
+              str(entry["taken"]) + " id=" + str(suggestion_id) + " from database")
     except IndexError:
         print("Entry not in database")
 
 
-def remove_all(db):
+def remove_all(connected_db):
     """ Remove all exam suggestions from database
 
-    >>> remove_all(db) # doctest: +SKIP
+    >>> remove_all(connected_db) # doctest: +SKIP
     Removed ... exam suggestions from database
 
     """
-    amount = len(db.query("SELECT * FROM exam_suggestions"))
-    db.query(
+    amount = len(connected_db.query("SELECT * FROM exam_suggestions"))
+    connected_db.query(
         "DELETE FROM exam_suggestions", None)
 
     print("Removed " + str(amount) + " exam suggestions from database")
 
 
-def approve(id, db):
+def approve(suggestion_id, connected_db):
     """ Approve exam suggestion and add to database
 
-    >>> approve(1, db) # doctest: +SKIP
+    >>> approve(1, connected_db) # doctest: +SKIP
     Added ... taken on ... to database
 
     :param id: id of exam suggestion to add to results in database
 
     """
     try:
-        entry = db.query(
-            "SELECT * FROM exam_suggestions WHERE id=%s", (id,))[0]
-        remove(id, db)
+        entry = connected_db.query(
+            "SELECT * FROM exam_suggestions WHERE id=%s", (suggestion_id,))[0]
+        remove(suggestion_id, connected_db)
 
         if entry.get("exam", None) is not None:
-            db.query("UPDATE results SET exam=%s WHERE code=%s AND taken=%s",
-                     (entry["exam"], entry["code"], entry["taken"]))
+            connected_db.query("UPDATE results SET exam=%s WHERE code=%s AND taken=%s",
+                               (entry["exam"], entry["code"], entry["taken"]))
         elif entry.get("solution", None) is not None:
-            db.query("UPDATE results SET solution=%s WHERE code=%s AND taken=%s",
-                     (entry["solution"], entry["code"], entry["taken"]))
+            connected_db.query("UPDATE results SET solution=%s WHERE code=%s AND taken=%s",
+                               (entry["solution"], entry["code"], entry["taken"]))
 
         print("Added " + entry["code"] + " taken on " +
               str(entry["taken"]) + " to database")
@@ -151,51 +159,51 @@ def approve(id, db):
         print("Entry not in database")
 
 
-def approve_all(db):
+def approve_all(connected_db):
     """ Approve all exam suggestions and add to database
 
-    >>> approve_all(db) # doctest: +SKIP
+    >>> approve_all(connected_db) # doctest: +SKIP
     Added ... exams to database
 
     """
-    entries = db.query("SELECT * FROM exam_suggestions", None)
-    remove_all(db)
+    entries = connected_db.query("SELECT * FROM exam_suggestions", None)
+    remove_all(connected_db)
 
     for entry in entries:
         if entry.get("exam", None) is not None:
-            db.query("UPDATE results SET exam=%s WHERE code=%s AND taken=%s",
-                     (entry["exam"], entry["code"], entry["taken"]))
+            connected_db.query("UPDATE results SET exam=%s WHERE code=%s AND taken=%s",
+                               (entry["exam"], entry["code"], entry["taken"]))
         elif entry.get("solution", None) is not None:
-            db.query("UPDATE results SET solution=%s WHERE code=%s AND taken=%s",
-                     (entry["solution"], entry["code"], entry["taken"]))
+            connected_db.query("UPDATE results SET solution=%s WHERE code=%s AND taken=%s",
+                               (entry["solution"], entry["code"], entry["taken"]))
 
     print("Added " + str(len(entries)) + " exams to database")
 
 
-def show(id, db):
+def show(suggestion_id, connected_db):
     """ Open file from id in webbrowser
 
     opens file in browser
-    >>> show(1, db) # doctest: +SKIP
+    >>> show(1, connected_db) # doctest: +SKIP
 
     :param id: id of suggestion
 
     """
-    exam = db.query(
-        "SELECT exam FROM exam_suggestions WHERE id=%s", (id,))
-    with open("temp.pdf", "wb") as f:
-        f.write(exam[0]["exam"])
-        f.close()
+    exam = connected_db.query(
+        "SELECT exam FROM exam_suggestions WHERE id=%s", (suggestion_id,))
+    with open("temp.pdf", "wb") as file:
+        file.write(exam[0]["exam"])
+        file.close()
 
     webbrowser.open_new_tab("file://" + os.path.realpath("temp.pdf"))
 
 
-def init_db(filename, db):
+def init_db(filename, connected_db):
     """ Initiailze database using given file containing SQL statements
 
-    >>> init_db("mock.sql", db) # doctest: +SKIP
+    >>> init_db("mock.sql", connected_db) # doctest: +SKIP
 
     :param filename: name of file containing SQL to execute
     """
-    with open(filename, "r") as f:
-        db.query(f.read())
+    with open(filename, "r") as file:
+        connected_db.query(file.read())

@@ -1,19 +1,7 @@
 """Functional tests for all operations of the API"""
 
-
-import pytest
 from base64 import b64encode
 from flask import json
-
-import tentahjalpen
-
-
-@pytest.fixture
-def client(filled_db):
-    """Set up testing client to use when issuing requests"""
-
-    client = tentahjalpen.create_app(test_db=filled_db).test_client()
-    yield client
 
 
 def test_get_courses(client):
@@ -85,7 +73,7 @@ def test_get_solution(client):
     assert resp.data == open("tests/test.pdf", "rb").read()
 
 
-def test_get_exam_non_existent(client):
+def test_get_solution_non_existent(client):
     """Verify that we are given a 404 when accessing non-existent solution"""
 
     resp = client.get("/courses/EDA321/2022-12-12/solution")
@@ -97,9 +85,9 @@ def test_get_exam_non_existent(client):
 def test_put_suggestion(client, filled_db):
     """Verify that we can post an exam suggestion that gets added to the suggestion database"""
 
-    db = filled_db
+    test_db = filled_db
 
-    entry = db.query("SELECT * FROM results WHERE code=%s", ("EDA321",))[0]
+    entry = test_db.query("SELECT * FROM results WHERE code=%s", ("EDA321",))[0]
     assert entry["exam"] is None
 
     # get test.pdf file to use for mocking exam suggestions
@@ -112,16 +100,14 @@ def test_put_suggestion(client, filled_db):
         "exam": encoded
     })
 
-    entry = db.query(
+    entry = test_db.query(
         "SELECT * FROM exam_suggestions WHERE code=%s", ("EDA321",))[0]
 
     assert bytes(entry["exam"]) == file_bytes
 
 
-def test_put_suggestion_non_existent(client, filled_db):
+def test_put_suggestion_non_existent(client):
     """Verify that we get a 404 when trying to upload an exam to a non-existent course"""
-
-    db = filled_db
 
     # get test.pdf file to use for mocking exam suggestions
     file_bytes = open("tests/test.pdf", "rb").read()
@@ -137,10 +123,8 @@ def test_put_suggestion_non_existent(client, filled_db):
     assert data["error"] == "Not found"
 
 
-def test_put_suggestion_conflict(client, filled_db):
+def test_put_suggestion_conflict(client):
     """Verify that we get a 409 when trying to upload an exam that already exists"""
-
-    db = filled_db
 
     # get test.pdf file to use for mocking exam suggestions
     file_bytes = open("tests/test.pdf", "rb").read()
@@ -159,9 +143,9 @@ def test_put_suggestion_conflict(client, filled_db):
 def test_put_solution_suggestion(client, filled_db):
     """Verify that we can post a solution suggestion that gets added to the suggestion database"""
 
-    db = filled_db
+    test_db = filled_db
 
-    entry = db.query("SELECT * FROM results WHERE code=%s", ("EDA322",))[0]
+    entry = test_db.query("SELECT * FROM results WHERE code=%s", ("EDA322",))[0]
     assert entry["solution"] is None
 
     # get test.pdf file to use for mocking exam solution
@@ -174,16 +158,14 @@ def test_put_solution_suggestion(client, filled_db):
         "solution": encoded
     })
 
-    entry = db.query(
+    entry = test_db.query(
         "SELECT * FROM exam_suggestions WHERE code=%s", ("EDA322",))[0]
 
     assert bytes(entry["solution"]) == file_bytes
 
 
-def test_put_solution_suggestion_non_existent(client, filled_db):
+def test_put_solution_suggestion_non_existent(client):
     """Verify that we get a 404 when trying to upload a solution to a non-existent course"""
-
-    db = filled_db
 
     # get test.pdf file to use for mocking exam suggestions
     file_bytes = open("tests/test.pdf", "rb").read()
@@ -199,10 +181,8 @@ def test_put_solution_suggestion_non_existent(client, filled_db):
     assert data["error"] == "Not found"
 
 
-def test_put_solution_suggestion_conflict(client, filled_db):
+def test_put_solution_suggestion_conflict(client):
     """Verify that we get a 409 when trying to upload a solution that already exists"""
-
-    db = filled_db
 
     # get test.pdf file to use for mocking exam suggestions
     file_bytes = open("tests/test.pdf", "rb").read()

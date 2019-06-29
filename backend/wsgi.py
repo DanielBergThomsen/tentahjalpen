@@ -1,3 +1,8 @@
+"""
+File is meant to be executed when in production, using some a WSGI HTTP server such as
+gunicorn.
+"""
+
 from tentahjalpen import create_app
 
-app = create_app(production=True)
+APP = create_app(production=True)
