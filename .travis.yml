@@ -20,7 +20,7 @@ matrix:
     - cd ..
     deploy:
       provider: script
-      script: bash ./deploy.sh
+      script: bash ./deploy.sh backend dokku-backend
       on: master
     before_install:
     - openssl aes-256-cbc -K $encrypted_2ac04bea7f82_key -iv $encrypted_2ac04bea7f82_iv
@@ -43,3 +43,17 @@ matrix:
     script:
     - cd ..
     - make test-front
+    deploy:
+      provider: script
+      script: bash ./deploy.sh frontend dokku-frontend
+      on: master
+    before_install:
+    - openssl aes-256-cbc -K $encrypted_2ac04bea7f82_key -iv $encrypted_2ac04bea7f82_iv
+      -in .travis/deploy.key.enc -out .travis/deploy.key -d
+    - chmod +x ./deploy.sh
+    - eval "$(ssh-agent -s)"
+    - chmod 600 .travis/deploy.key
+    - ssh-add .travis/deploy.key
+    - ssh-keyscan www.tentahjalpen.se >> ~/.ssh/known_hosts
+    - git remote add dokku-frontend dokku@www.tentahjalpen.se:tentahjalpen-frontend
+    - git config --global push.default simple

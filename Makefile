@@ -31,7 +31,7 @@ test-front:
 
 
 dokku-backend:
-	git subtree push --prefix backend dokku-backend master
+	git subtree push --prefix backend dokku-backend master
 
 
 dev-back:
