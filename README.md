@@ -8,7 +8,7 @@
 A website and an API to look at the results of exams taken at 
 Chalmers University of Technology.
 <br>
-<a href="https://travis-ci.com/DanielBergThomsen/tentahjalpen"
+<a href="https://travis-ci.com/DanielBergThomsen/tentahjalpen">
 <img src="https://travis-ci.com/DanielBergThomsen/tentahjalpen.svg?branch=master">
 </a>
 </h4>
