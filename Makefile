@@ -54,6 +54,12 @@ prod-back:
 	--timeout 300
 
 
+mock-back:
+	. backend/venv/bin/activate \
+		&& cd backend \
+		&& python mocking_backend.py
+
+
 docker-back:
 	docker build --tag=tentahjalpen_backend . \
 	&& docker run -p 80:80 tentahjalpen_backend

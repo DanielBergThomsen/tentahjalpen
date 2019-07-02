@@ -26,6 +26,9 @@ class DBInterface: # pylint: disable=too-few-public-methods
         elif kwargs.get("test_connection", None) is not None:
             self.connection = kwargs["test_connection"]
 
+        elif kwargs.get("test_connection_url", None) is not None:
+            self.connection = psycopg2.connect(kwargs["test_connection_url"])
+
         else:
             self.connection = psycopg2.connect(dbname=kwargs["dbname"], user=kwargs["user"],
                                                password=kwargs["password"], host=kwargs["host"],
