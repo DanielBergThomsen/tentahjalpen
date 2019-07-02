@@ -25,6 +25,11 @@ test-front:
 	cd frontend && npm run-script test && cd ..
 
 
+# needs backend to run tests with
+cypress:
+	cd frontend && ./node_modules/.bin/cypress open
+
+
 # FRONTEND
 # --------------------------------------------------
 # BACKEND

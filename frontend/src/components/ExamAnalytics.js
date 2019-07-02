@@ -565,18 +565,24 @@ class ExamAnalytics extends Component
 								</Col>
 								<Col xs={2} className="align-self-end">
 									<div className="custom-control custom-switch text-right">
-										<input type="checkbox" className="custom-control-input" onChange={this.toggleFailRate} id="fail-rate-toggle"/>
+											<input type="checkbox" 
+													className="custom-control-input" 
+													onChange={this.toggleFailRate} 
+													id="fail-rate-toggle"
+													data-testid="fail-rate-toggle"/>
 										<label className="custom-control-label" htmlFor="fail-rate-toggle">Rates</label>
 									</div>
 								</Col>
 							</Row>
 							<div
 								className="h-100"
+								data-testid="chart-container"
 								onClick={this.selectData}
 								onTouchEnd={this.selectData}
 								onMouseOut={this.resetExamPanel}>
 								{this.state.showFailRate ?
-									<Line key={this.state.courses[0].code}
+									<Line
+										key={this.state.courses[0].code}
 										data={this.state.rates[0]}
 										options=
 										{{

@@ -40,5 +40,8 @@
   ],
   "engines": {
     "yarn": "YARN NO LONGER USED - use npm instead."
+  },
+  "devDependencies": {
+    "cypress": "^3.3.1"
   }
 }

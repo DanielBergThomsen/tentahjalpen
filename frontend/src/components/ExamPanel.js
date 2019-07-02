@@ -157,7 +157,9 @@ class ExamPanel extends Component
 		{
 			return(
 				<div className="d-flex flex-column align-items-stretch overview">
-					<div className="flex-grow-1 pie">
+						<div className="flex-grow-1 pie"
+							data-testid="pie-chart-container"
+						>
 						<Pie
 							ref={this.chartRef}
 							data-testid="chart"
@@ -241,7 +243,8 @@ class ExamPanel extends Component
 						</Button>
 					</Modal.Footer>
 				</Modal>
-				<div className="flex-grow-1 pie">
+				<div className="flex-grow-1 pie"
+				data-testid="pie-chart-container">
 					<Pie
 						ref={this.chartRef}
 						data-testid="chart"
