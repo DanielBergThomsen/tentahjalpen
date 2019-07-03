@@ -1,8 +1,6 @@
 #!/bin/bash
 
-# $1 = directory
-# $2 = remote to push to
-
 git stash --all
 git checkout master
-git subtree push --prefix $1 $2 master
+git subtree push --prefix backend dokku-backend master
+git subtree push --prefix frontend dokku-frontend master
