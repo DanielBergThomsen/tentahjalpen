@@ -1,5 +1,6 @@
 stages:
   - test
+  - E2E
   - deploy
 
 jobs:
@@ -33,6 +34,27 @@ jobs:
       script:
         - cd ..
         - make test-front
+
+    - stage: E2E
+      language: python
+      python: '3.6'
+      cache:
+        - npm
+        - pip
+
+      install:
+        - cd frontend
+        - npm install
+        - cd ..
+        - pip install -r backend/requirements.txt
+
+      script:
+        - cd backend
+        - python mocking_backend.py &
+          until curl -s http://localhost:5000; do true; done > /dev/null
+        - cd ../frontend
+        - npm start &
+        - node_modules/.bin/cypress run
 
     - stage: deploy
       language: bash
