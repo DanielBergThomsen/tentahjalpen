@@ -1,7 +1,5 @@
 ### Current issues and essential features
 
-Add end-to-end tests using Cypress
-
 Make backend send email when receiving exam suggestion 
 - Give option to grant or deny directly in email
 - Email contains pdf and details
