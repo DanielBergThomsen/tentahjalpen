@@ -3,7 +3,7 @@
 Make backend send email when receiving exam suggestion 
 - Give option to grant or deny directly in email
 - Email contains pdf and details
-- Extend api to allow for this by taking a password token
+- Allow safe interaction with API by providing temporary URL to grant/deny
 
 Slider for only displaying a certain amount of exams: 
 https://github.com/jerairrest/react-chartjs-2/issues/246
