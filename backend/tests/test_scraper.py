@@ -2,20 +2,7 @@
 comprised of calls to these more basic functions. Furthermore I have decided to omit scrape_pdfs
 as mocking chalmerstenta.se is low in the list of priorities as of current."""
 
-from pathlib import Path
-from tentahjalpen.scraper.scraper import update_excel, update_db, load_dataframe
-
-
-def test_update_excel(tmpdir):
-    """Verify that the function actually downloads the file"""
-
-    file = str(tmpdir / "results.xlsx")
-    assert not Path(file).is_file()
-
-    update_excel(
-        "https://document.chalmers.se/download?docid=00000000-0000-0000-0000-00001C968DC6",
-        file)
-    assert Path(file).is_file()
+from tentahjalpen.scraper.scraper import update_db, load_dataframe
 
 
 def test_load_dataframe():

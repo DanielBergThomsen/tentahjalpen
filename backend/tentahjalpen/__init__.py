@@ -12,7 +12,6 @@ from flask import Flask, make_response, Response, jsonify, abort, send_file, url
 from flask import request, session
 from flask.logging import create_logger
 from flask_cors import CORS
-from flask_apscheduler import APScheduler
 from .db_interface import DBInterface, init_db
 from .scraper import scraper
 
@@ -35,16 +34,8 @@ def create_app(production=False, test_db=None):
     # DBInterface instance used for all database operations
     connected_db = None
 
-    def update():
-        """Update database using scraper.update_all and update jsoned_course_list to
-        include any new entries"""
-
-        # update database
-        with app.app_context():
-            scraper.update_all(connected_db)
-
     def init():
-        """Check if database is initialized, initialize if necessary and update afterwards"""
+        """Check if database is initialized and initialize if necessary."""
 
         logger.info("Checking if database is initialized...")
         entries = connected_db.query("SELECT * FROM results")
@@ -52,8 +43,6 @@ def create_app(production=False, test_db=None):
         if not entries:
             logger.info("Initializing database...")
             init_db("schema.sql", connected_db)
-
-        update()
 
     # provide default configs for app
     # some of these should be overridden in config.py
@@ -69,24 +58,6 @@ def create_app(production=False, test_db=None):
         DB_HOST="localhost",
         DB_PORT=5432,
         SSL="disable",
-
-        # configuration used to setup Flask-APScheduler to call update() every night at
-        # 02:01 (GMT+2)
-        JOBS=[
-            {
-                "id": "update db data",
-                "func": update,
-                "trigger": "cron",
-                "year": "*",
-                "month": "*",
-                "day": "*",
-                "hour": 2,
-                "minute": 1,
-                "second": 0,
-            }
-        ],
-        SCHEDULER_API_ENABLED=True,
-        SCHEDULER_TIMEZONE="Europe/Stockholm"
     )
 
     if production:
@@ -115,12 +86,8 @@ def create_app(production=False, test_db=None):
     # allow CORS headers
     CORS(app)
 
-    # only run update and init if not running tests
+    # only run init if not running tests
     if test_db is None:
-        # start scheduler for updates
-        scheduler = APScheduler()
-        scheduler.init_app(app)
-        scheduler.start()
 
         # perform manual check of database on startup
         init()
