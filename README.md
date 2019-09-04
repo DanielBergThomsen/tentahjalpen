@@ -47,13 +47,10 @@ the API is public and free to use. The backend is managed using
 the `backend/db_manager.py` file, which hosts functions to scrape
 the necessary data and accept/deny submitted exam pdfs. When
 starting the backend it will check that a database has been
-initialized (and initialize it if necessary) as well as check
-that the data available is up to date with the given excel file
-at https://document.chalmers.se/doc/00000000-0000-0000-0000-00001C968DC6.
-When running, the backend checks for updates to the excel file
-at 02:01AM (GMT+2). The backend has a function to scrape exams
-and solutions over at https://chalmerstenta.se, which are accessible
-using the `backend/db_manager.py` and must be run manually.
+initialized and initialize it if necessary. The backend has a 
+function to scrape exams and solutions over at 
+https://chalmerstenta.se, which are accessible using the 
+`backend/db_manager.py` and must be run manually.
 
 
 ## Setting up a local development environment
