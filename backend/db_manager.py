@@ -27,7 +27,7 @@ def main(connected_db):
     Available commands:
     init FILENAME: initialize table using given file and scrape exam data
     list: print table of exam suggestions in database
-    scrape: scrape statistics from Chalmers and PDFs from chalmerstenta.se
+    scrape: scrape statistics from given file argument and PDFs from chalmerstenta.se
     show ID: open file in browser
     remove ID: remove entry with the given ID
     remove_all: remove all entries
@@ -59,9 +59,10 @@ def main(connected_db):
             remove_all(connected_db)
         elif len(command) == 1 and command[0] == "approve_all":
             approve_all(connected_db)
-        elif len(command) == 1 and command[0] == "scrape":
+        elif len(command) == 2 and command[0] == "scrape":
             print("Scraping statistics...")
-            scraper.update_all(connected_db)
+            df = scraper.load_dataframe(command[1])
+            scraper.update_db(df, connected_db)
             print("Scraping exam pdfs...")
             scraper.scrape_pdfs(connected_db)
             print("Done")

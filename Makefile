@@ -68,7 +68,7 @@ docker-back:
 manage-db:
 	. backend/venv/bin/activate \
 		&& cd backend \
-		&& python backend/src/db_manager.py data.db \
+		&& python db_manager.py $(DATABASE_URL)\
 		&& cd ..
 
 
