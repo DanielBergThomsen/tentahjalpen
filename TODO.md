@@ -36,6 +36,8 @@ Can't run scrape more than once per session - low priority
 
 Add snapshot testing
 
+Add support for project course results
+
 ### Ideas
 
 Support for Anki decks
