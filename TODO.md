@@ -1,5 +1,12 @@
 ### Current issues and essential features
 
+Fix adjusted fail-rate. Use the following algorithm to decide what data
+will be used:
+- Go through the last three years and pick the three with the most
+- participants.
+- Exclude exams not meeting a threshold value to avoid computing fail rate
+- for new courses which will be biased because of re-exams.
+
 Make backend send email when receiving exam suggestion 
 - Give option to grant or deny directly in email
 - Email contains pdf and details
