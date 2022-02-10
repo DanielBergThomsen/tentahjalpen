@@ -10,7 +10,7 @@
     "chart.js": "^2.8.0",
     "deyarn": "^1.0.2",
     "jest-fetch-mock": "^2.1.2",
-    "node-sass": "^4.11.0",
+    "node-sass": "^7.0.0",
     "react": "^16.8.4",
     "react-bootstrap": "^1.0.0-beta.6",
     "react-chartjs-2": "^2.7.4",
